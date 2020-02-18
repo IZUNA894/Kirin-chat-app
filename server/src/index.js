@@ -3,81 +3,61 @@ const path = require("path");
 const http = require("http");
 const socket = require("socket.io");
 const Filter= require("bad-words");
+const cors = require("cors");
+
+var UserRouter = require("./routers/user_router");
+var MsgRouter = require("./routers/msg_router");
+
+require('./db/mongoose');
 
 var app = express();
 var publicPath= path.join(__dirname , "../","/public");
 var filter = new Filter();
 var server = http.createServer(app);
 
-var io= socket(server)
-
+app.use(express.json());
 app.use(express.static(publicPath),(req,res,next)=>{
   next();
 });
-
-io.on("connection",(socket)=>{
-  // if new user arrives...
-        //sendGreetings(socket);
-        // sendJoinedbanner(socket);
-
-  socket.on('join', function (name) {
-      socket.join(name.toString());
-      console.log("joined"+ name);
-    });
-
- // when msg is recieved...
-  socket.on("sendMsg",(msg,callback)=>{
-    console.log("msg recieved");
-    console.log(msg.val);
-
-    if(filter.isProfane(msg.value))
-    {
-
-      //socket.emit("msgBlocked");
-      callback(undefined,{error:"blocked!"});
-    }
-    else{
-      callback("succes",undefined);
-      console.log("msg recieved");
-      console.log("sending msg to");
-      console.log(msg.reciever);
-      //io.sockets.in(msg.reciever).emit('recieveMsg', msg);
-
-      socket.broadcast.to(msg.reciever).emit("recieveMsg",msg);
-    // callback(); 
-    }
-
+app.use(require("cors")());
+app.use(
+  cors({
+    origin: ["http://localhost:3001"],
+    credentials: true
   })
+);
 
+app.use(MsgRouter);
 
- // if a user leave..
-  socket.on("disconnect",()=>{
-    sendLeaveBanner(socket);
-  });
+var io= socket(server)
+const {socketUtil} = require('./socketUtil.js');
+//console.log(socketUtil);
+socketUtil(io);
 
-  console.log("connection establlished");
-})
+app.get('/hello',function(req,res){
+ res.end("hello from express sever req processing");
+});
 
 server.listen(3001,()=>{
   console.log("listening on port 3001");
 });
 
 
-function readMsgBanner(socket)
-{
-  socket.emit("msgRead");
-}
-function sendGreetings(socket){
-  socket.emit("WelcomeGreetings");
-}
+// function readMsgBanner(socket)
+// {
+//   socket.emit("msgRead");
+// }
+// function sendGreetings(socket){
+//   socket.emit("WelcomeGreetings");
+// }
 
-function sendJoinedbanner(socket)
-{
-  socket.broadcast.emit("joined");
-}
-function sendAlert(e){
-  socket.broadcast.emit("alert",e);
-}
-function sendLeaveBanner(socket){
-  socket.broadcast.emit("leave");
-}
+// function sendJoinedbanner(socket)
+// {
+//   socket.broadcast.emit("joined");
+// }
+// function sendAlert(e){
+//   socket.broadcast.emit("alert",e);
+// }
+// function sendLeaveBanner(socket){
+//   socket.broadcast.emit("leave");
+// }
