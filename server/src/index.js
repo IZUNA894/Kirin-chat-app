@@ -7,6 +7,7 @@ const cors = require("cors");
 
 var UserRouter = require("./routers/user_router");
 var MsgRouter = require("./routers/msg_router");
+var RelRouter = require("./routers/relations_router");
 
 require('./db/mongoose');
 
@@ -27,7 +28,9 @@ app.use(
   })
 );
 
+app.use(UserRouter);
 app.use(MsgRouter);
+app.use(RelRouter);
 
 var io= socket(server)
 const {socketUtil} = require('./socketUtil.js');

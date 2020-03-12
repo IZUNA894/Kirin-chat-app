@@ -9,13 +9,22 @@ var userSchema  = new mongoose.Schema({
       type:String,
       trim:true,
     },
-    // age:{
-    //   type:Number,
-    //   default:10,
-    //   required:true,
-    //   min:0,
+    username:{
+      required:true,
+      type:String,
+      trim:true
+    },
+    phoneno:{
+      type:String,
+      default:10,
+      required:true,
+      min:0,
+      validate(value){
+        if(!validator.isMobilePhone(value))
+        throw "phone number is valid";
+      }
 
-    // } ,
+    } ,
   email:{
     type:String,
     required:true,
@@ -23,7 +32,7 @@ var userSchema  = new mongoose.Schema({
     lowercase:true,
     validate(value){
       if(!validator.isEmail(value))
-      throw "error:is not email";
+      throw "email is not valid";
     }
   },
   password:{
@@ -63,13 +72,22 @@ var userSchema  = new mongoose.Schema({
 userSchema.pre('save' , async function(next){
   var user = this;
 
-  // var isFound = await User.findOne({email:user.email});
-  // if(isFound){
-  //   console.log(isFound);
-  //   throw new Error("email is taken");
-  //
-  // }
+  var isFound ;
+  isFound = await User.findOne({email:user.email});
+  if(isFound){
+    console.log('insise email found' ,isFound);
+    throw new Error("email is already taken,use different");
+  
+  }
 
+  isFound = await User.findOne({phoneno:user.phoneno});
+  if(isFound){
+   throw new Error("phone no. is already registered,use different");
+  }
+  isFound = await User.findOne({username:user.username})
+  if(isFound){
+    throw new Error("username is already taken,choose different");
+  }
   var hashedPass ="";
   if(user.isModified('password'))
   {

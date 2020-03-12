@@ -20,8 +20,7 @@ var upload=multer({
     cb(undefined,true);
   }
 });
-router.post('/users/me/avatar',auth,upload.single("avatar"), async function(req,res)
-{
+router.post('/users/me/avatar',auth,upload.single("avatar"), async function(req,res){
    var buffer = await sharp(req.file.buffer).resize({
      width:250,
      height:250
@@ -30,7 +29,7 @@ router.post('/users/me/avatar',auth,upload.single("avatar"), async function(req,
    await req.user.save();
    res.send("uploaded");
 
-},(err,req,res,next)=>{
+  },(err,req,res,next)=>{
   //console.log(err.message);
   res.status(400).send({error:err.message});
 });
@@ -49,7 +48,7 @@ router.delete('/users/me/avatar',auth, async function(req,res)
 
 
 // getting a avatar
-router.get('/users/me/avatar',async function(req,res)
+router.get('/users/me/avatar',auth,async function(req,res)
 {
    res.set("Content-Type","image/jpg");
    var user = await User.findById("5db71379e308cb343441695c");
@@ -63,20 +62,20 @@ router.get('/users/me/avatar',async function(req,res)
 
 
 // getting a user profile...
-router.get('/users/me',auth, async function(req,res)
+router.get('/users/all', async function(req,res)
 {
    // try
    //   {
    //
-   //   //var users = await User.find({});
-   //   res.send(req.user);
+   var users = await User.find({});
+   res.send(users);
    // } catch (e) {
    //   res.status(400).send(e);
 
    // }
    //await  req.user.populate("tasks").execPopulate();
    //console.log( req.user.tasks)
-   res.send(req.user);
+   //res.send(req.user);
 
 });
 
@@ -138,7 +137,8 @@ catch(e)
 
 
 //creating a new user
-router.post('/users', async function(req,res){
+router.post('/users/create', async function(req,res){
+  console.log(req.body);
  try{
    var user = new User(req.body);
    var user = await user.save();

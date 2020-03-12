@@ -16,11 +16,14 @@ router.get('/msg/getMsg',async function(req,res)
    console.log(tokenId);
 
    var msgs = await RelMsg.find({tokenId});
+   if(msgs[0]){
    msgs= msgs[0].msgs;
-
    console.log(JSON.stringify(msgs));
    res.send(msgs);
-
+   }
+   else{
+     res.send("");
+   }
 },(err,req,res,next)=>{
   res.status(400).send({error:err.message});
 });

@@ -3,12 +3,17 @@ var mongoose= require('mongoose');
 //var bcrypt = require('bcryptjs');
 //var jwt = require("jsonwebtoken");
 //const Task = require("./task_module");
-
-var userSchema  = new mongoose.Schema({
-    uid: {
+var Users = require("./user_module");
+var RelationsSchema  = new mongoose.Schema({
+    // uid: {
+    //   required:true,
+    //   type:String,
+    //   trim:true,
+    // },
+    name:{
       required:true,
       type:String,
-      trim:true,
+      trim:true
     },
     // age:{
     //   type:Number,
@@ -22,8 +27,10 @@ var userSchema  = new mongoose.Schema({
     {
       uid:{
         required:true,
-        type:String
+        type:mongoose.Schema.Types.ObjectId,
+        refer:'Users'
       }
+      
     }
   ]
   
@@ -38,27 +45,29 @@ var userSchema  = new mongoose.Schema({
 //   foreignField:"owner"
 // });
 
-userSchema.pre('save' , async function(next){
-  var user = this;
+// RelationsSchema.pre('save' , async function(next){
+//   var user = this;
+//   console.log('pizza is my love',JSON.stringify(user));
 
-  // var isFound = await User.findOne({email:user.email});
-  // if(isFound){
-  //   console.log(isFound);
-  //   throw new Error("email is taken");
-  //
-  // }
+//   // var isFound = await User.findOne({email:user.email});
+//   // if(isFound){
+//   //   console.log(isFound);
+//   //   throw new Error("email is taken");
+//   //
+//   // }
 
-  
-  next();
-});
+//   user.save();
+//   next();
 
-
-
-
+// });
 
 
 
 
 
-var Realations = mongoose.model('Realations', userSchema);
+
+
+
+
+var Realations = mongoose.model('Realations', RelationsSchema);
 module.exports = Realations;
