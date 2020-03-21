@@ -2,7 +2,6 @@ const express = require("express");
 const path = require("path");
 const http = require("http");
 const socket = require("socket.io");
-const Filter= require("bad-words");
 const cors = require("cors");
 
 var UserRouter = require("./routers/user_router");
@@ -13,7 +12,6 @@ require('./db/mongoose');
 
 var app = express();
 var publicPath= path.join(__dirname , "../","/public");
-var filter = new Filter();
 var server = http.createServer(app);
 
 app.use(express.json());
@@ -23,7 +21,7 @@ app.use(express.static(publicPath),(req,res,next)=>{
 app.use(require("cors")());
 app.use(
   cors({
-    origin: ["http://localhost:3001"],
+    origin: [process.env.APP_LINK],
     credentials: true
   })
 );
@@ -40,27 +38,9 @@ socketUtil(io);
 app.get('/hello',function(req,res){
  res.end("hello from express sever req processing");
 });
-
-server.listen(3001,()=>{
-  console.log("listening on port 3001");
+var port = process.env.PORT || 3001
+server.listen(port,()=>{
+  console.log("listening on port " , port);
 });
 
 
-// function readMsgBanner(socket)
-// {
-//   socket.emit("msgRead");
-// }
-// function sendGreetings(socket){
-//   socket.emit("WelcomeGreetings");
-// }
-
-// function sendJoinedbanner(socket)
-// {
-//   socket.broadcast.emit("joined");
-// }
-// function sendAlert(e){
-//   socket.broadcast.emit("alert",e);
-// }
-// function sendLeaveBanner(socket){
-//   socket.broadcast.emit("leave");
-// }

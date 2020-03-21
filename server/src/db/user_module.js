@@ -1,8 +1,10 @@
+// this model will store user info 
+
 var validator= require('validator');
 var mongoose= require('mongoose');
 var bcrypt = require('bcryptjs');
 var jwt = require("jsonwebtoken");
-//const Task = require("./task_module");
+
 var userSchema  = new mongoose.Schema({
     name: {
       required:true,
@@ -12,16 +14,19 @@ var userSchema  = new mongoose.Schema({
     username:{
       required:true,
       type:String,
-      trim:true
+      trim:true,
+      unique:true,
+      lowercase:true
     },
     phoneno:{
       type:String,
       default:10,
       required:true,
       min:0,
+      // unique:true,          //remove this line comment if u want phone no, to be unique...
       validate(value){
         if(!validator.isMobilePhone(value))
-        throw "phone number is valid";
+        throw new Error("phone number is not valid");
       }
 
     } ,
@@ -30,9 +35,10 @@ var userSchema  = new mongoose.Schema({
     required:true,
     trim:true,
     lowercase:true,
+    // unique:true,                remove this line comment if u want phone no, to be unique...
     validate(value){
       if(!validator.isEmail(value))
-      throw "email is not valid";
+      throw new Error("email is not valid");
     }
   },
   password:{
@@ -40,11 +46,6 @@ var userSchema  = new mongoose.Schema({
     trim:true,
     minlength:8,
     required:true
-  },
-  imgSrc:{
-    type:String,
-    trim:true,
-    default:null
   },
   tokens:[
     {
@@ -63,36 +64,16 @@ var userSchema  = new mongoose.Schema({
   timestamps:true
 } );
 
-// userSchema.virtual("tasks",{
-//   ref:'Task',
-//   localField:"_id",
-//   foreignField:"owner"
-// });
 
+
+// function to hash the password before save
 userSchema.pre('save' , async function(next){
   var user = this;
-
-  var isFound ;
-  isFound = await User.findOne({email:user.email});
-  if(isFound){
-    console.log('insise email found' ,isFound);
-    throw new Error("email is already taken,use different");
   
-  }
-
-  isFound = await User.findOne({phoneno:user.phoneno});
-  if(isFound){
-   throw new Error("phone no. is already registered,use different");
-  }
-  isFound = await User.findOne({username:user.username})
-  if(isFound){
-    throw new Error("username is already taken,choose different");
-  }
   var hashedPass ="";
   if(user.isModified('password'))
   {
    hashedPass =  await bcrypt.hash(user.password,8);
-   //console.log(hashedPass);
    user.password =hashedPass;
   }
   next();
@@ -100,10 +81,10 @@ userSchema.pre('save' , async function(next){
 
 
 
-
+//function to get jwt token
 userSchema.methods.getAuthToken = async function(){
   var user = this;
-  var token = await jwt.sign({_id:user._id.toString()},"secretkey");
+  var token = await jwt.sign({_id:user._id.toString()},process.env.JWT_SECRETKEY);
   user.tokens= user.tokens.concat({token});
   await user.save();
   return token;
@@ -113,14 +94,16 @@ userSchema.methods.getAuthToken = async function(){
 userSchema.methods.toJSON = function (){
   var user= this;
   user = user.toObject();
-  // delete user.tokens;
-  // delete user.password;
-  // delete user.__v;
-  // delete user.avatar;
+   delete user.tokens;
+   delete user.password;
+   delete user.__v;
+   delete user.avatar;
   //console.log(user);
   return user;
 }
 
+//this function is use to find if a usr exists in database ot not
+// called at a time of login
 userSchema.statics.findByCredentials = async (email,password) =>
 {
   var user = await User.findOne({email});
@@ -128,13 +111,14 @@ userSchema.statics.findByCredentials = async (email,password) =>
     // throw new Error("unable to login");
     return undefined;
   }
-
-  var isFound = bcrypt.compare(password,user.password);
-  //console.log("value of is found"+ JSON.stringify(isFound));
-  if(!isFound){
-    console.log("error thrrownnnnn");
-    throw new Error("unable to login");
+  //console.log(password,user.password);
+  var result = await bcrypt.compare(password,user.password)
+  
+  if(!result)
+  {
+    return undefined
   }
+  //console.log(result);
   return user
 }
 
